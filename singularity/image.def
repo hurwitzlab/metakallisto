@@ -1,0 +1,46 @@
+BootStrap: docker
+From: ubuntu:latest
+
+%environment
+    PATH=/app/metakallisto/scripts:$PATH
+
+%runscript
+    exec python /app/metakallisto/mash_kallisto_pipeline.py
+
+%post
+    apt-get update
+    apt-get install -y locales wget build-essential autoconf git \
+        python2.7 python-pip cmake libhdf5-serial-dev
+    locale-gen en_US.UTF-8
+
+    pip install numpy scipy biopython
+
+    mkdir /app
+    cd /app
+
+    #
+    # Install Mash
+    #
+    wget https://github.com/marbl/Mash/releases/download/v2.1.1/mash-Linux64-v2.1.1.tar
+    tar xvf mash-Linux64-v2.1.1.tar
+    mv ./mash-Linux64-v2.1.1/mash /usr/local/bin
+    rm -rf mash*
+
+    # 
+    # Install (meta)kallisto
+    # 
+    cd /app
+    git clone https://github.com/pachterlab/metakallisto.git
+    git clone https://github.com/pachterlab/kallisto.git
+    cd kallisto
+    mkdir build
+    cd build
+    cmake ..
+    make install
+
+    #
+    # Mount points for TACC directories
+    #
+    mkdir /home1
+    mkdir /scratch
+    mkdir /work
